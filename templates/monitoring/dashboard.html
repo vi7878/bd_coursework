@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load monitoring_extras %}
+
+{% block title %}Інженерне меню - Моніторинг{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-dot {
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid #333;
+    }
+    .dot-green { background-color: #28a745; }
+    .dot-yellow { background-color: #ffc107; }
+    .dot-red { background-color: #dc3545; }
+    .dot-black { background-color: #343a40; }
+    
+    .status-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .status-table th, .status-table td {
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+        text-align: center;
+    }
+    .status-table th {
+        background-color: #f8f9fa;
+    }
+    .status-table tr:hover {
+        background-color: #f1f3f5;
+        cursor: pointer;
+    }
+    .addr-col { text-align: left !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Інженерне меню - Стан системи</h2>
+    </div>
+    
+    <table class="status-table">
+        <thead>
+            <tr>
+                <th class="addr-col">Адреса / Назва</th>
+                <th>Загальний стан</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for boiler in boilers %}
+                <tr onclick="window.location='{% url 'monitoring:boiler_detail' boiler.pk %}'">
+                    <td class="addr-col">
+                        <strong>{{ boiler.name }}</strong><br>
+                        <small>{{ boiler.address }}</small>
+                    </td>
+                    <td>
+                        <span class="status-{{ boiler.status }}">{{ boiler.get_status_display }}</span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

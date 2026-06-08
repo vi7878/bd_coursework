@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Повідомити про інцидент{% endblock %}
+
+{% block content %}
+    <h2>Реєстрація інциденту для котельні</h2>
+    <form method="post" class="card">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-danger">Зареєструвати інцидент</button>
+            <a href="{% url 'monitoring:dashboard' %}" class="btn">Скасувати</a>
+        </div>
+    </form>
+{% endblock %}

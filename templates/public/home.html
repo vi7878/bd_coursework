@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Головна - Моніторинг котелень{% endblock %}
+
+{% block content %}
+    <div class="search-container">
+        <h1>Ласкаво просимо до системи моніторингу котелень</h1>
+        <p>Введіть свою адресу, щоб перевірити поточний стан опалення та гарячої води.</p>
+        <form action="{% url 'public:search' %}" method="get">
+            <input type="text" name="q" placeholder="Введіть вулицю або місто..." class="search-input" required>
+            <button type="submit" class="btn">Пошук</button>
+        </form>
+    </div>
+{% endblock %}

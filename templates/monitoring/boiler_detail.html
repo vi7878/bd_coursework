@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load monitoring_extras %}
+
+{% block title %}{{ boiler.name }} - Детальний моніторинг{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .device-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        color: white;
+        margin-right: 0.5rem;
+    }
+    .bg-green { background-color: #28a745; }
+    .bg-yellow { background-color: #ffc107; color: #333; }
+    .bg-red { background-color: #dc3545; }
+    .bg-black { background-color: #343a40; }
+
+    .schematic-placeholder {
+        width: 100%;
+        max-width: 1300px;
+        height: 700px;
+        background-color: #e9ecef;
+        border: 2px dashed #adb5bd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #6c757d;
+        font-weight: bold;
+        margin: 2rem 0;
+        overflow-x: auto;
+    }
+
+    .tables-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        max-width: 800px;
+    }
+
+    .data-table-title {
+        text-align: left;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th, .data-table td {
+        border: 1px solid #dee2e6;
+        padding: 8px;
+    }
+
+    .data-table th {
+        text-align: center;
+        background-color: #f8f9fa;
+    }
+
+    .data-table td:first-child {
+        text-align: center;
+        font-weight: bold;
+        background-color: #fafafa;
+        width: 30%;
+    }
+
+    .data-table td:not(:first-child) {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="header-section">
+        <div>
+            <h2>{{ boiler.name }}</h2>
+            <p style="margin: 0;"><strong>Адреса:</strong> {{ boiler.address }}</p>
+        </div>
+        <div style="font-size: 1.2rem;">
+            Стан: <span class="status-{{ boiler.status }}">{{ boiler.get_status_display }}</span>
+            <a href="{% url 'monitoring:boiler_status_edit' boiler.pk %}" style="font-size: 0.8rem; margin-left: 10px;">(Змінити)</a>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h3>Стан основних вузлів</h3>
+        <div style="margin-bottom: 1rem;">
+            <a href="{% static scheme_image %}" target="_blank" class="btn btn-primary">
+                Переглянути технологічну схему
+            </a>
+        </div>
+        <table class="data-table" style="max-width: 600px;">
+            <thead>
+                <tr>
+                    <th>Вузол</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr>
+                    <td>{{ device.category.name }}</td>
+                    <td>
+                        <span class="device-badge bg-{{ device.status }}">
+                            {{ device.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    
+    <div class="schematic-placeholder">
+    </div>
+
+    
+    <div class="tables-container">
+        
+        <div style="margin-bottom: 2rem;">
+            <h3>Датчики та обладнання</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Назва</th>
+                        <th>Тип</th>
+                        <th>Значення</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sensor in sensors %}
+                    <tr>
+                        <td>{{ sensor.name }}</td>
+                        <td>{{ sensor.get_sensor_type_display }}</td>
+                        <td>{{ sensor.current_value }} {{ sensor.unit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <h3>Адреси обслуговування</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Вулиця</th>
+                        <th>Будинок</th>
+                        <th>Стан</th>
+                        <th>Коментар</th>
+                        <th>Дія</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for addr in boiler.service_addresses.all %}
+                    <tr>
+                        <td>{{ addr.street }}</td>
+                        <td>{{ addr.building }}</td>
+                        <td>{{ addr.get_status_display }}</td>
+                        <td>{{ addr.note|default_if_none:"" }}</td>
+                        <td><a href="{% url 'monitoring:address_edit' addr.pk %}">Статус / Коментар</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        
+        <div>
+            <div class="data-table-title">Тиск</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>на звороті</th>
+                        <th>на подачі</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ tables_data.pressure.return }}</td>
+                        <td>{{ tables_data.pressure.supply }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        
+        <div>
+            <div class="data-table-title">Тепло</div>
+            <table class="data-table">
+                <tbody>
+                    <tr>
+                        <th></th>
+                        <th>на звороті</th>
+                        <th>на подачі</th>
+                        <th>середня</th>
+                    </tr>
+                    <tr>
+                        <td>Температура</td>
+                        <td>{{ tables_data.heat.temp_return }}</td>
+                        <td>{{ tables_data.heat.temp_supply }}</td>
+                        <td>{{ avg_temperature|floatformat:1 }}</td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>за мин. годину</th>
+                        <th>з поч. доби</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <td>G підживл.</td>
+                        <td>{{ tables_data.heat.g_makeup_hr }}</td>
+                        <td>{{ tables_data.heat.g_makeup_day }}</td>
+                    </tr>
+                    <tr>
+                        <td>G тепла</td>
+                        <td>{{ tables_data.heat.g_heat_hr }}</td>
+                        <td>{{ tables_data.heat.g_heat_day }}</td>
+                    </tr>
+                    <tr>
+                        <td>G Подачі</td>
+                        <td>{{ tables_data.heat.g_supply_hr }}</td>
+                        <td>{{ tables_data.heat.g_supply_day }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        
+        <div>
+            <div class="data-table-title">Електрика</div>
+            <table class="data-table">
+                <tbody>
+                    <tr>
+                        <th></th>
+                        <th>актив</th>
+                        <th>реактив</th>
+                    </tr>
+                    <tr>
+                        <td>Потужність</td>
+                        <td>{{ tables_data.electricity.power_active }}</td>
+                        <td>{{ tables_data.electricity.power_reactive }}</td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>за мин. добу</th>
+                        <th>з поч. місяця</th>
+                    </tr>
+                    <tr>
+                        <td>Споживання</td>
+                        <td>{{ tables_data.electricity.cons_day }}</td>
+                        <td>{{ tables_data.electricity.cons_month }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        
+        <div>
+            <div class="data-table-title">Газ</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>за мин. добу</th>
+                        <th>з поч. місяця</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Споживання</td>
+                        <td>{{ tables_data.gas.cons_day }}</td>
+                        <td>{{ tables_data.gas.cons_month }}</td>
+                    </tr>
+                    <tr>
+                        <td>Тиск</td>
+                        <td>{{ tables_data.gas.pressure_day }}</td>
+                        <td>{{ tables_data.gas.pressure_month }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div style="margin-top: 3rem;">
+        <a href="{% url 'monitoring:incident_create' boiler.pk %}" class="btn btn-danger">Повідомити про аварію</a>
+        <a href="{% url 'monitoring:dashboard' %}" class="btn">Повернутися до меню</a>
+    </div>
+{% endblock %}

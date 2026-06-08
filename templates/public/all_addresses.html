@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Усі адреси обслуговування{% endblock %}
+
+{% block content %}
+    <div class="search-container">
+        <h1>Усі адреси обслуговування</h1>
+        <form action="{% url 'public:all_addresses' %}" method="get">
+            <input type="text" name="q" placeholder="Введіть вулицю або номер будинку..." class="search-input" value="{{ request.GET.q }}">
+            <button type="submit" class="btn">Пошук</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Вулиця</th>
+                <th>Будинок</th>
+                <th>Статус</th>
+                <th>Коментар</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for addr in addresses %}
+            <tr>
+                <td>{{ addr.street }}</td>
+                <td>{{ addr.building }}</td>
+                <td>
+                    <span class="status-{% if addr.status == 'normal' %}active{% else %}error{% endif %}">
+                        {{ addr.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ addr.note|default_if_none:"" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center;">Адрес не знайдено</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_paginated %}
+    <div style="margin-top: 1rem; text-align: center;">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn">&laquo; Перша</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn">Назад</a>
+        {% endif %}
+
+        <span>Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn">Вперед</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn">Остання &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
