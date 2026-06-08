@@ -1,14 +1,8 @@
 # Python
-**/__pycache__/
+__pycache__/
 *.py[cod]
 venv/
 .env
-
-# Node
-node_modules/
-
-# OS
-.DS_Store
 
 # Project specific
 db_data/
